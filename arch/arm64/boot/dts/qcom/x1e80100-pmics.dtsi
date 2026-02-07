@@ -110,7 +110,7 @@
 			};
 		};
 
-		pmc8380-6-thermal {
+		pmc8380_6_thermal: pmc8380-6-thermal {
 			polling-delay-passive = <100>;
 
 			thermal-sensors = <&pmc8380_6_temp_alarm>;
@@ -237,6 +237,26 @@
 			reboot_reason: reboot-reason@48 {
 				reg = <0x48 0x1>;
 				bits = <1 7>;
+			};
+		};
+
+		pmk8550_sdam_15: nvram@7e00 {
+			compatible = "qcom,spmi-sdam";
+			reg = <0x7e00>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0 0x7e00 0x100>;
+
+			charge_limit_en: charge-limit-en@73 {
+				reg = <0x73 0x1>;
+			};
+
+			charge_limit_end: charge-limit-end@75 {
+				reg = <0x75 0x1>;
+			};
+
+			charge_limit_delta: charge-limit-delta@76 {
+				reg = <0x76 0x1>;
 			};
 		};
 
@@ -474,6 +494,8 @@
 		reg = <0xc SPMI_USID>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+
+		status = "disabled";
 
 		pm8010_temp_alarm: temp-alarm@2400 {
 			compatible = "qcom,spmi-temp-alarm";

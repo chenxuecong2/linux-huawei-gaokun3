@@ -28,6 +28,7 @@
 #include <asm/cpu_device_id.h>
 #include <asm/intel-family.h>
 #include <asm/iosf_mbi.h>
+#include <asm/msr.h>
 
 /* bitmasks for RAPL MSRs, used by primitive access functions */
 #define ENERGY_STATUS_MASK      0xffffffff
@@ -1276,6 +1277,7 @@ static const struct x86_cpu_id rapl_ids[] __initconst = {
 	X86_MATCH_VFM(INTEL_RAPTORLAKE,		&rapl_defaults_core),
 	X86_MATCH_VFM(INTEL_RAPTORLAKE_P,        &rapl_defaults_core),
 	X86_MATCH_VFM(INTEL_RAPTORLAKE_S,	&rapl_defaults_core),
+	X86_MATCH_VFM(INTEL_BARTLETTLAKE,	&rapl_defaults_core),
 	X86_MATCH_VFM(INTEL_METEORLAKE,		&rapl_defaults_core),
 	X86_MATCH_VFM(INTEL_METEORLAKE_L,	&rapl_defaults_core),
 	X86_MATCH_VFM(INTEL_SAPPHIRERAPIDS_X,	&rapl_defaults_spr_server),

@@ -317,7 +317,7 @@ static int adsp_load(struct rproc *rproc, const struct firmware *fw)
 	struct qcom_adsp *adsp = rproc->priv;
 	int ret;
 
-	ret = qcom_mdt_load_no_init(adsp->dev, fw, rproc->firmware, 0,
+	ret = qcom_mdt_load_no_init(adsp->dev, fw, rproc->firmware,
 				    adsp->mem_region, adsp->mem_phys,
 				    adsp->mem_size, &adsp->mem_reloc);
 	if (ret)
@@ -678,7 +678,10 @@ static int adsp_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	rproc->auto_boot = desc->auto_boot;
+	if (desc->auto_boot)
+		rproc->auto_boot = RPROC_AUTO_BOOT_ATTACH_OR_START;
+	else
+		rproc->auto_boot = RPROC_AUTO_BOOT_DISABLED;
 	rproc->has_iommu = desc->has_iommu;
 	rproc_coredump_set_elf_info(rproc, ELFCLASS32, EM_NONE);
 

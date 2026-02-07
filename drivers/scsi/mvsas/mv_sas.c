@@ -1175,7 +1175,7 @@ static int mvs_dev_found_notify(struct domain_device *dev, int lock)
 	mvi_device->dev_type = dev->dev_type;
 	mvi_device->mvi_info = mvi;
 	mvi_device->sas_device = dev;
-	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
+	if (dev_parent_is_expander(dev)) {
 		int phy_id;
 
 		phy_id = sas_find_attached_phy_id(&parent_dev->ex_dev, dev);
@@ -1755,7 +1755,7 @@ static int mvs_handle_event(struct mvs_info *mvi, void *data, int handler)
 
 static void mvs_sig_time_out(struct timer_list *t)
 {
-	struct mvs_phy *phy = from_timer(phy, t, timer);
+	struct mvs_phy *phy = timer_container_of(phy, t, timer);
 	struct mvs_info *mvi = phy->mvi;
 	u8 phy_no;
 

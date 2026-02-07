@@ -5,6 +5,7 @@
  */
 
 #include <linux/debugfs.h>
+#include <linux/export.h>
 
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_bridge.h>
@@ -58,6 +59,7 @@ static const struct drm_connector_funcs panel_bridge_connector_funcs = {
 };
 
 static int panel_bridge_attach(struct drm_bridge *bridge,
+			       struct drm_encoder *encoder,
 			       enum drm_bridge_attach_flags flags)
 {
 	struct panel_bridge *panel_bridge = drm_bridge_to_panel_bridge(bridge);
@@ -81,7 +83,7 @@ static int panel_bridge_attach(struct drm_bridge *bridge,
 	drm_panel_bridge_set_orientation(connector, bridge);
 
 	drm_connector_attach_encoder(&panel_bridge->connector,
-					  bridge->encoder);
+					  encoder);
 
 	if (bridge->dev->registered) {
 		if (connector->funcs->reset)
@@ -286,15 +288,14 @@ struct drm_bridge *drm_panel_bridge_add_typed(struct drm_panel *panel,
 	if (!panel)
 		return ERR_PTR(-EINVAL);
 
-	panel_bridge = devm_kzalloc(panel->dev, sizeof(*panel_bridge),
-				    GFP_KERNEL);
-	if (!panel_bridge)
-		return ERR_PTR(-ENOMEM);
+	panel_bridge = devm_drm_bridge_alloc(panel->dev, struct panel_bridge, bridge,
+					     &panel_bridge_bridge_funcs);
+	if (IS_ERR(panel_bridge))
+		return (void *)panel_bridge;
 
 	panel_bridge->connector_type = connector_type;
 	panel_bridge->panel = panel;
 
-	panel_bridge->bridge.funcs = &panel_bridge_bridge_funcs;
 	panel_bridge->bridge.of_node = panel->dev->of_node;
 	panel_bridge->bridge.ops = DRM_BRIDGE_OP_MODES;
 	panel_bridge->bridge.type = connector_type;
@@ -327,7 +328,8 @@ void drm_panel_bridge_remove(struct drm_bridge *bridge)
 	panel_bridge = drm_bridge_to_panel_bridge(bridge);
 
 	drm_bridge_remove(bridge);
-	devm_kfree(panel_bridge->panel->dev, bridge);
+	/* TODO remove this after reworking panel_bridge lifetime */
+	devm_drm_put_bridge(panel_bridge->panel->dev, bridge);
 }
 EXPORT_SYMBOL(drm_panel_bridge_remove);
 

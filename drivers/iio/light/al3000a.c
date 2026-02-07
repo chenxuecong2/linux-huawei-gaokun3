@@ -94,7 +94,7 @@ static int al3000a_init(struct al3000a_data *data)
 
 	ret = devm_add_action_or_reset(dev, al3000a_set_pwr_off, data);
 	if (ret)
-		return dev_err_probe(dev, ret, "failed to add action\n");
+		return ret;
 
 	ret = regmap_write(data->regmap, AL3000A_REG_SYSTEM, AL3000A_CONFIG_RESET);
 	if (ret)
@@ -190,7 +190,7 @@ MODULE_DEVICE_TABLE(i2c, al3000a_id);
 
 static const struct of_device_id al3000a_of_match[] = {
 	{ .compatible = "dynaimage,al3000a" },
-	{ /* sentinel */ }
+	{ }
 };
 MODULE_DEVICE_TABLE(of, al3000a_of_match);
 

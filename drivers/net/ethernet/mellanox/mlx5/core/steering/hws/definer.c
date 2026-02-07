@@ -158,6 +158,218 @@ struct mlx5hws_definer_conv_data {
 	u32 match_flags;
 };
 
+#define HWS_DEFINER_ENTRY(name)[MLX5HWS_DEFINER_FNAME_##name] = #name
+
+static const char * const hws_definer_fname_to_str[] = {
+	HWS_DEFINER_ENTRY(ETH_SMAC_47_16_O),
+	HWS_DEFINER_ENTRY(ETH_SMAC_47_16_I),
+	HWS_DEFINER_ENTRY(ETH_SMAC_15_0_O),
+	HWS_DEFINER_ENTRY(ETH_SMAC_15_0_I),
+	HWS_DEFINER_ENTRY(ETH_DMAC_47_16_O),
+	HWS_DEFINER_ENTRY(ETH_DMAC_47_16_I),
+	HWS_DEFINER_ENTRY(ETH_DMAC_15_0_O),
+	HWS_DEFINER_ENTRY(ETH_DMAC_15_0_I),
+	HWS_DEFINER_ENTRY(ETH_TYPE_O),
+	HWS_DEFINER_ENTRY(ETH_TYPE_I),
+	HWS_DEFINER_ENTRY(ETH_L3_TYPE_O),
+	HWS_DEFINER_ENTRY(ETH_L3_TYPE_I),
+	HWS_DEFINER_ENTRY(VLAN_TYPE_O),
+	HWS_DEFINER_ENTRY(VLAN_TYPE_I),
+	HWS_DEFINER_ENTRY(VLAN_FIRST_PRIO_O),
+	HWS_DEFINER_ENTRY(VLAN_FIRST_PRIO_I),
+	HWS_DEFINER_ENTRY(VLAN_CFI_O),
+	HWS_DEFINER_ENTRY(VLAN_CFI_I),
+	HWS_DEFINER_ENTRY(VLAN_ID_O),
+	HWS_DEFINER_ENTRY(VLAN_ID_I),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_TYPE_O),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_TYPE_I),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_PRIO_O),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_PRIO_I),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_CFI_O),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_CFI_I),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_ID_O),
+	HWS_DEFINER_ENTRY(VLAN_SECOND_ID_I),
+	HWS_DEFINER_ENTRY(IPV4_IHL_O),
+	HWS_DEFINER_ENTRY(IPV4_IHL_I),
+	HWS_DEFINER_ENTRY(IP_DSCP_O),
+	HWS_DEFINER_ENTRY(IP_DSCP_I),
+	HWS_DEFINER_ENTRY(IP_ECN_O),
+	HWS_DEFINER_ENTRY(IP_ECN_I),
+	HWS_DEFINER_ENTRY(IP_TTL_O),
+	HWS_DEFINER_ENTRY(IP_TTL_I),
+	HWS_DEFINER_ENTRY(IPV4_DST_O),
+	HWS_DEFINER_ENTRY(IPV4_DST_I),
+	HWS_DEFINER_ENTRY(IPV4_SRC_O),
+	HWS_DEFINER_ENTRY(IPV4_SRC_I),
+	HWS_DEFINER_ENTRY(IP_VERSION_O),
+	HWS_DEFINER_ENTRY(IP_VERSION_I),
+	HWS_DEFINER_ENTRY(IP_FRAG_O),
+	HWS_DEFINER_ENTRY(IP_FRAG_I),
+	HWS_DEFINER_ENTRY(IP_LEN_O),
+	HWS_DEFINER_ENTRY(IP_LEN_I),
+	HWS_DEFINER_ENTRY(IP_TOS_O),
+	HWS_DEFINER_ENTRY(IP_TOS_I),
+	HWS_DEFINER_ENTRY(IPV6_FLOW_LABEL_O),
+	HWS_DEFINER_ENTRY(IPV6_FLOW_LABEL_I),
+	HWS_DEFINER_ENTRY(IPV6_DST_127_96_O),
+	HWS_DEFINER_ENTRY(IPV6_DST_95_64_O),
+	HWS_DEFINER_ENTRY(IPV6_DST_63_32_O),
+	HWS_DEFINER_ENTRY(IPV6_DST_31_0_O),
+	HWS_DEFINER_ENTRY(IPV6_DST_127_96_I),
+	HWS_DEFINER_ENTRY(IPV6_DST_95_64_I),
+	HWS_DEFINER_ENTRY(IPV6_DST_63_32_I),
+	HWS_DEFINER_ENTRY(IPV6_DST_31_0_I),
+	HWS_DEFINER_ENTRY(IPV6_SRC_127_96_O),
+	HWS_DEFINER_ENTRY(IPV6_SRC_95_64_O),
+	HWS_DEFINER_ENTRY(IPV6_SRC_63_32_O),
+	HWS_DEFINER_ENTRY(IPV6_SRC_31_0_O),
+	HWS_DEFINER_ENTRY(IPV6_SRC_127_96_I),
+	HWS_DEFINER_ENTRY(IPV6_SRC_95_64_I),
+	HWS_DEFINER_ENTRY(IPV6_SRC_63_32_I),
+	HWS_DEFINER_ENTRY(IPV6_SRC_31_0_I),
+	HWS_DEFINER_ENTRY(IP_PROTOCOL_O),
+	HWS_DEFINER_ENTRY(IP_PROTOCOL_I),
+	HWS_DEFINER_ENTRY(L4_SPORT_O),
+	HWS_DEFINER_ENTRY(L4_SPORT_I),
+	HWS_DEFINER_ENTRY(L4_DPORT_O),
+	HWS_DEFINER_ENTRY(L4_DPORT_I),
+	HWS_DEFINER_ENTRY(TCP_FLAGS_I),
+	HWS_DEFINER_ENTRY(TCP_FLAGS_O),
+	HWS_DEFINER_ENTRY(TCP_SEQ_NUM),
+	HWS_DEFINER_ENTRY(TCP_ACK_NUM),
+	HWS_DEFINER_ENTRY(GTP_TEID),
+	HWS_DEFINER_ENTRY(GTP_MSG_TYPE),
+	HWS_DEFINER_ENTRY(GTP_EXT_FLAG),
+	HWS_DEFINER_ENTRY(GTP_NEXT_EXT_HDR),
+	HWS_DEFINER_ENTRY(GTP_EXT_HDR_PDU),
+	HWS_DEFINER_ENTRY(GTP_EXT_HDR_QFI),
+	HWS_DEFINER_ENTRY(GTPU_DW0),
+	HWS_DEFINER_ENTRY(GTPU_FIRST_EXT_DW0),
+	HWS_DEFINER_ENTRY(GTPU_DW2),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_0),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_1),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_2),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_3),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_4),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_5),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_6),
+	HWS_DEFINER_ENTRY(FLEX_PARSER_7),
+	HWS_DEFINER_ENTRY(VPORT_REG_C_0),
+	HWS_DEFINER_ENTRY(VXLAN_FLAGS),
+	HWS_DEFINER_ENTRY(VXLAN_VNI),
+	HWS_DEFINER_ENTRY(VXLAN_GPE_FLAGS),
+	HWS_DEFINER_ENTRY(VXLAN_GPE_RSVD0),
+	HWS_DEFINER_ENTRY(VXLAN_GPE_PROTO),
+	HWS_DEFINER_ENTRY(VXLAN_GPE_VNI),
+	HWS_DEFINER_ENTRY(VXLAN_GPE_RSVD1),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_LEN),
+	HWS_DEFINER_ENTRY(GENEVE_OAM),
+	HWS_DEFINER_ENTRY(GENEVE_PROTO),
+	HWS_DEFINER_ENTRY(GENEVE_VNI),
+	HWS_DEFINER_ENTRY(SOURCE_QP),
+	HWS_DEFINER_ENTRY(SOURCE_GVMI),
+	HWS_DEFINER_ENTRY(REG_0),
+	HWS_DEFINER_ENTRY(REG_1),
+	HWS_DEFINER_ENTRY(REG_2),
+	HWS_DEFINER_ENTRY(REG_3),
+	HWS_DEFINER_ENTRY(REG_4),
+	HWS_DEFINER_ENTRY(REG_5),
+	HWS_DEFINER_ENTRY(REG_6),
+	HWS_DEFINER_ENTRY(REG_7),
+	HWS_DEFINER_ENTRY(REG_8),
+	HWS_DEFINER_ENTRY(REG_9),
+	HWS_DEFINER_ENTRY(REG_10),
+	HWS_DEFINER_ENTRY(REG_11),
+	HWS_DEFINER_ENTRY(REG_A),
+	HWS_DEFINER_ENTRY(REG_B),
+	HWS_DEFINER_ENTRY(GRE_KEY_PRESENT),
+	HWS_DEFINER_ENTRY(GRE_C),
+	HWS_DEFINER_ENTRY(GRE_K),
+	HWS_DEFINER_ENTRY(GRE_S),
+	HWS_DEFINER_ENTRY(GRE_PROTOCOL),
+	HWS_DEFINER_ENTRY(GRE_OPT_KEY),
+	HWS_DEFINER_ENTRY(GRE_OPT_SEQ),
+	HWS_DEFINER_ENTRY(GRE_OPT_CHECKSUM),
+	HWS_DEFINER_ENTRY(INTEGRITY_O),
+	HWS_DEFINER_ENTRY(INTEGRITY_I),
+	HWS_DEFINER_ENTRY(ICMP_DW1),
+	HWS_DEFINER_ENTRY(ICMP_DW2),
+	HWS_DEFINER_ENTRY(ICMP_DW3),
+	HWS_DEFINER_ENTRY(IPSEC_SPI),
+	HWS_DEFINER_ENTRY(IPSEC_SEQUENCE_NUMBER),
+	HWS_DEFINER_ENTRY(IPSEC_SYNDROME),
+	HWS_DEFINER_ENTRY(MPLS0_O),
+	HWS_DEFINER_ENTRY(MPLS1_O),
+	HWS_DEFINER_ENTRY(MPLS2_O),
+	HWS_DEFINER_ENTRY(MPLS3_O),
+	HWS_DEFINER_ENTRY(MPLS4_O),
+	HWS_DEFINER_ENTRY(MPLS0_I),
+	HWS_DEFINER_ENTRY(MPLS1_I),
+	HWS_DEFINER_ENTRY(MPLS2_I),
+	HWS_DEFINER_ENTRY(MPLS3_I),
+	HWS_DEFINER_ENTRY(MPLS4_I),
+	HWS_DEFINER_ENTRY(FLEX_PARSER0_OK),
+	HWS_DEFINER_ENTRY(FLEX_PARSER1_OK),
+	HWS_DEFINER_ENTRY(FLEX_PARSER2_OK),
+	HWS_DEFINER_ENTRY(FLEX_PARSER3_OK),
+	HWS_DEFINER_ENTRY(FLEX_PARSER4_OK),
+	HWS_DEFINER_ENTRY(FLEX_PARSER5_OK),
+	HWS_DEFINER_ENTRY(FLEX_PARSER6_OK),
+	HWS_DEFINER_ENTRY(FLEX_PARSER7_OK),
+	HWS_DEFINER_ENTRY(OKS2_MPLS0_O),
+	HWS_DEFINER_ENTRY(OKS2_MPLS1_O),
+	HWS_DEFINER_ENTRY(OKS2_MPLS2_O),
+	HWS_DEFINER_ENTRY(OKS2_MPLS3_O),
+	HWS_DEFINER_ENTRY(OKS2_MPLS4_O),
+	HWS_DEFINER_ENTRY(OKS2_MPLS0_I),
+	HWS_DEFINER_ENTRY(OKS2_MPLS1_I),
+	HWS_DEFINER_ENTRY(OKS2_MPLS2_I),
+	HWS_DEFINER_ENTRY(OKS2_MPLS3_I),
+	HWS_DEFINER_ENTRY(OKS2_MPLS4_I),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_0),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_1),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_2),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_3),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_4),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_5),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_6),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_OK_7),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_0),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_1),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_2),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_3),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_4),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_5),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_6),
+	HWS_DEFINER_ENTRY(GENEVE_OPT_DW_7),
+	HWS_DEFINER_ENTRY(IB_L4_OPCODE),
+	HWS_DEFINER_ENTRY(IB_L4_QPN),
+	HWS_DEFINER_ENTRY(IB_L4_A),
+	HWS_DEFINER_ENTRY(RANDOM_NUM),
+	HWS_DEFINER_ENTRY(PTYPE_L2_O),
+	HWS_DEFINER_ENTRY(PTYPE_L2_I),
+	HWS_DEFINER_ENTRY(PTYPE_L3_O),
+	HWS_DEFINER_ENTRY(PTYPE_L3_I),
+	HWS_DEFINER_ENTRY(PTYPE_L4_O),
+	HWS_DEFINER_ENTRY(PTYPE_L4_I),
+	HWS_DEFINER_ENTRY(PTYPE_L4_EXT_O),
+	HWS_DEFINER_ENTRY(PTYPE_L4_EXT_I),
+	HWS_DEFINER_ENTRY(PTYPE_FRAG_O),
+	HWS_DEFINER_ENTRY(PTYPE_FRAG_I),
+	HWS_DEFINER_ENTRY(TNL_HDR_0),
+	HWS_DEFINER_ENTRY(TNL_HDR_1),
+	HWS_DEFINER_ENTRY(TNL_HDR_2),
+	HWS_DEFINER_ENTRY(TNL_HDR_3),
+	[MLX5HWS_DEFINER_FNAME_MAX] = "DEFINER_FNAME_UNKNOWN",
+};
+
+const char *mlx5hws_definer_fname_to_str(enum mlx5hws_definer_fname fname)
+{
+	if (fname > MLX5HWS_DEFINER_FNAME_MAX)
+		fname = MLX5HWS_DEFINER_FNAME_MAX;
+	return hws_definer_fname_to_str[fname];
+}
+
 static void
 hws_definer_ones_set(struct mlx5hws_definer_fc *fc,
 		     void *match_param,
@@ -515,8 +727,9 @@ hws_definer_conv_outer(struct mlx5hws_definer_conv_data *cd,
 	u32 *s_ipv6, *d_ipv6;
 
 	if (HWS_IS_FLD_SET_SZ(match_param, outer_headers.l4_type, 0x2) ||
-	    HWS_IS_FLD_SET_SZ(match_param, outer_headers.reserved_at_c2, 0xe) ||
-	    HWS_IS_FLD_SET_SZ(match_param, outer_headers.reserved_at_c4, 0x4)) {
+	    HWS_IS_FLD_SET_SZ(match_param, outer_headers.l4_type_ext, 0x4) ||
+	    HWS_IS_FLD_SET_SZ(match_param, outer_headers.reserved_at_c6, 0xa) ||
+	    HWS_IS_FLD_SET_SZ(match_param, outer_headers.reserved_at_d4, 0x4)) {
 		mlx5hws_err(cd->ctx, "Unsupported outer parameters set\n");
 		return -EINVAL;
 	}
@@ -691,8 +904,9 @@ hws_definer_conv_inner(struct mlx5hws_definer_conv_data *cd,
 	u32 *s_ipv6, *d_ipv6;
 
 	if (HWS_IS_FLD_SET_SZ(match_param, inner_headers.l4_type, 0x2) ||
-	    HWS_IS_FLD_SET_SZ(match_param, inner_headers.reserved_at_c2, 0xe) ||
-	    HWS_IS_FLD_SET_SZ(match_param, inner_headers.reserved_at_c4, 0x4)) {
+	    HWS_IS_FLD_SET_SZ(match_param, inner_headers.l4_type_ext, 0x4) ||
+	    HWS_IS_FLD_SET_SZ(match_param, inner_headers.reserved_at_c6, 0xa) ||
+	    HWS_IS_FLD_SET_SZ(match_param, inner_headers.reserved_at_d4, 0x4)) {
 		mlx5hws_err(cd->ctx, "Unsupported inner parameters set\n");
 		return -EINVAL;
 	}
@@ -1066,8 +1280,9 @@ hws_definer_conv_misc2(struct mlx5hws_definer_conv_data *cd,
 	struct mlx5hws_definer_fc *fc = cd->fc;
 	struct mlx5hws_definer_fc *curr_fc;
 
-	if (HWS_IS_FLD_SET_SZ(match_param, misc_parameters_2.reserved_at_1a0, 0x8) ||
-	    HWS_IS_FLD_SET_SZ(match_param, misc_parameters_2.reserved_at_1b8, 0x8) ||
+	if (HWS_IS_FLD_SET_SZ(match_param, misc_parameters_2.psp_syndrome, 0x8) ||
+	    HWS_IS_FLD_SET_SZ(match_param,
+			      misc_parameters_2.ipsec_next_header, 0x8) ||
 	    HWS_IS_FLD_SET_SZ(match_param, misc_parameters_2.reserved_at_1c0, 0x40) ||
 	    HWS_IS_FLD_SET(match_param, misc_parameters_2.macsec_syndrome) ||
 	    HWS_IS_FLD_SET(match_param, misc_parameters_2.ipsec_syndrome)) {
@@ -1616,80 +1831,6 @@ err_free_fc:
 	return ret;
 }
 
-struct mlx5hws_definer_fc *
-mlx5hws_definer_conv_match_params_to_compressed_fc(struct mlx5hws_context *ctx,
-						   u8 match_criteria_enable,
-						   u32 *match_param,
-						   int *fc_sz)
-{
-	struct mlx5hws_definer_fc *compressed_fc = NULL;
-	struct mlx5hws_definer_conv_data cd = {0};
-	struct mlx5hws_definer_fc *fc;
-	int ret;
-
-	fc = hws_definer_alloc_fc(ctx, MLX5HWS_DEFINER_FNAME_MAX);
-	if (!fc)
-		return NULL;
-
-	cd.fc = fc;
-	cd.ctx = ctx;
-
-	if (match_criteria_enable & MLX5HWS_DEFINER_MATCH_CRITERIA_OUTER) {
-		ret = hws_definer_conv_outer(&cd, match_param);
-		if (ret)
-			goto err_free_fc;
-	}
-
-	if (match_criteria_enable & MLX5HWS_DEFINER_MATCH_CRITERIA_INNER) {
-		ret = hws_definer_conv_inner(&cd, match_param);
-		if (ret)
-			goto err_free_fc;
-	}
-
-	if (match_criteria_enable & MLX5HWS_DEFINER_MATCH_CRITERIA_MISC) {
-		ret = hws_definer_conv_misc(&cd, match_param);
-		if (ret)
-			goto err_free_fc;
-	}
-
-	if (match_criteria_enable & MLX5HWS_DEFINER_MATCH_CRITERIA_MISC2) {
-		ret = hws_definer_conv_misc2(&cd, match_param);
-		if (ret)
-			goto err_free_fc;
-	}
-
-	if (match_criteria_enable & MLX5HWS_DEFINER_MATCH_CRITERIA_MISC3) {
-		ret = hws_definer_conv_misc3(&cd, match_param);
-		if (ret)
-			goto err_free_fc;
-	}
-
-	if (match_criteria_enable & MLX5HWS_DEFINER_MATCH_CRITERIA_MISC4) {
-		ret = hws_definer_conv_misc4(&cd, match_param);
-		if (ret)
-			goto err_free_fc;
-	}
-
-	if (match_criteria_enable & MLX5HWS_DEFINER_MATCH_CRITERIA_MISC5) {
-		ret = hws_definer_conv_misc5(&cd, match_param);
-		if (ret)
-			goto err_free_fc;
-	}
-
-	/* Allocate fc array on mt */
-	compressed_fc = hws_definer_alloc_compressed_fc(fc);
-	if (!compressed_fc) {
-		mlx5hws_err(ctx,
-			    "Convert to compressed fc: failed to set field copy to match template\n");
-		goto err_free_fc;
-	}
-	*fc_sz = hws_definer_get_fc_size(fc);
-
-err_free_fc:
-	kfree(fc);
-	return compressed_fc;
-}
-
 static int
 hws_definer_find_byte_in_tag(struct mlx5hws_definer *definer,
 			     u32 hl_byte_off,
@@ -1852,7 +1993,7 @@ hws_definer_copy_sel_ctrl(struct mlx5hws_definer_sel_ctrl *ctrl,
 static int
 hws_definer_find_best_match_fit(struct mlx5hws_context *ctx,
 				struct mlx5hws_definer *definer,
-				u8 *hl)
+				u8 *hl, bool allow_jumbo)
 {
 	struct mlx5hws_definer_sel_ctrl ctrl = {0};
 	bool found;
@@ -1868,6 +2009,9 @@ hws_definer_find_best_match_fit(struct mlx5hws_context *ctx,
 		definer->type = MLX5HWS_DEFINER_TYPE_MATCH;
 		return 0;
 	}
+
+	if (!allow_jumbo)
+		return -E2BIG;
 
 	/* Try to create a full/limited jumbo definer */
 	ctrl.allowed_full_dw = ctx->caps->full_dw_jumbo_support ? DW_SELECTORS :
@@ -1945,7 +2089,8 @@ int mlx5hws_definer_compare(struct mlx5hws_definer *definer_a,
 int
 mlx5hws_definer_calc_layout(struct mlx5hws_context *ctx,
 			    struct mlx5hws_match_template *mt,
-			    struct mlx5hws_definer *match_definer)
+			    struct mlx5hws_definer *match_definer,
+			    bool allow_jumbo)
 {
 	u8 *match_hl;
 	int ret;
@@ -1967,7 +2112,8 @@ mlx5hws_definer_calc_layout(struct mlx5hws_context *ctx,
 	}
 
 	/* Find the match definer layout for header layout match union */
-	ret = hws_definer_find_best_match_fit(ctx, match_definer, match_hl);
+	ret = hws_definer_find_best_match_fit(ctx, match_definer, match_hl,
+					      allow_jumbo);
 	if (ret) {
 		if (ret == -E2BIG)
 			mlx5hws_dbg(ctx,
@@ -2155,7 +2301,7 @@ int mlx5hws_definer_mt_init(struct mlx5hws_context *ctx,
 	struct mlx5hws_definer match_layout = {0};
 	int ret;
 
-	ret = mlx5hws_definer_calc_layout(ctx, mt, &match_layout);
+	ret = mlx5hws_definer_calc_layout(ctx, mt, &match_layout, true);
 	if (ret) {
 		mlx5hws_err(ctx, "Failed to calculate matcher definer layout\n");
 		return ret;

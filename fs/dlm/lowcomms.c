@@ -534,7 +534,7 @@ static void lowcomms_state_change(struct sock *sk)
 	/* SCTP layer is not calling sk_data_ready when the connection
 	 * is done, so we catch the signal through here.
 	 */
-	if (sk->sk_shutdown == RCV_SHUTDOWN)
+	if (sk->sk_shutdown & RCV_SHUTDOWN)
 		lowcomms_data_ready(sk);
 }
 
@@ -1703,7 +1703,7 @@ static int work_start(void)
 		return -ENOMEM;
 	}
 
-	process_workqueue = alloc_workqueue("dlm_process", WQ_HIGHPRI | WQ_BH, 0);
+	process_workqueue = alloc_workqueue("dlm_process", WQ_HIGHPRI | WQ_BH | WQ_PERCPU, 0);
 	if (!process_workqueue) {
 		log_print("can't start dlm_process");
 		destroy_workqueue(io_workqueue);

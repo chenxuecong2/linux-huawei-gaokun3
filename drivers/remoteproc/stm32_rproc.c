@@ -704,7 +704,8 @@ out:
 }
 
 static int stm32_rproc_parse_dt(struct platform_device *pdev,
-				struct stm32_rproc *ddata, bool *auto_boot)
+				struct stm32_rproc *ddata,
+				enum rproc_auto_boot *auto_boot)
 {
 	struct device *dev = &pdev->dev;
 	struct device_node *np = dev->of_node;
@@ -785,7 +786,10 @@ static int stm32_rproc_parse_dt(struct platform_device *pdev,
 	if (err)
 		dev_info(dev, "failed to get pdds\n");
 
-	*auto_boot = of_property_read_bool(np, "st,auto-boot");
+	if (of_property_read_bool(np, "st,auto-boot"))
+		*auto_boot = RPROC_AUTO_BOOT_ATTACH_OR_START;
+	else
+		*auto_boot = RPROC_AUTO_BOOT_DISABLED;
 
 	/*
 	 * See if we can check the M4 status, i.e if it was started
@@ -835,6 +839,7 @@ static int stm32_rproc_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct stm32_rproc *ddata;
 	struct device_node *np = dev->of_node;
+	const char *fw_name;
 	struct rproc *rproc;
 	unsigned int state;
 	int ret;
@@ -843,7 +848,12 @@ static int stm32_rproc_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
-	rproc = devm_rproc_alloc(dev, np->name, &st_rproc_ops, NULL, sizeof(*ddata));
+	/* Look for an optional firmware name */
+	ret = rproc_of_parse_firmware(dev, 0, &fw_name);
+	if (ret < 0 && ret != -EINVAL)
+		return ret;
+
+	rproc = devm_rproc_alloc(dev, np->name, &st_rproc_ops, fw_name, sizeof(*ddata));
 	if (!rproc)
 		return -ENOMEM;
 

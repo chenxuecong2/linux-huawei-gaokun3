@@ -3,6 +3,7 @@
  * Copyright (c) 2024 Linaro Ltd
  */
 
+#include <linux/export.h>
 #include <linux/mutex.h>
 #include <linux/of_graph.h>
 #include <linux/platform_device.h>
@@ -129,6 +130,7 @@ EXPORT_SYMBOL(drm_connector_hdmi_audio_plugged_notify);
 
 static const struct hdmi_codec_ops drm_connector_hdmi_audio_ops = {
 	.audio_startup = drm_connector_hdmi_audio_startup,
+	.hw_params = drm_connector_hdmi_audio_prepare,
 	.prepare = drm_connector_hdmi_audio_prepare,
 	.audio_shutdown = drm_connector_hdmi_audio_shutdown,
 	.mute_stream = drm_connector_hdmi_audio_mute_stream,
@@ -143,6 +145,7 @@ static const struct hdmi_codec_ops drm_connector_hdmi_audio_ops = {
  * @hdmi_codec_dev: device to be used as a parent for the HDMI Codec
  * @funcs: callbacks for this HDMI Codec
  * @max_i2s_playback_channels: maximum number of playback I2S channels
+ * @i2s_formats: set of I2S formats (use 0 for a bus-specific set)
  * @spdif_playback: set if HDMI codec has S/PDIF playback port
  * @dai_port: sound DAI port, -1 if it is not enabled
  *
@@ -155,6 +158,7 @@ int drm_connector_hdmi_audio_init(struct drm_connector *connector,
 				  struct device *hdmi_codec_dev,
 				  const struct drm_connector_hdmi_audio_funcs *funcs,
 				  unsigned int max_i2s_playback_channels,
+				  u64 i2s_formats,
 				  bool spdif_playback,
 				  int dai_port)
 {
@@ -162,6 +166,7 @@ int drm_connector_hdmi_audio_init(struct drm_connector *connector,
 		.ops = &drm_connector_hdmi_audio_ops,
 		.max_i2s_channels = max_i2s_playback_channels,
 		.i2s = !!max_i2s_playback_channels,
+		.i2s_formats = i2s_formats,
 		.spdif = spdif_playback,
 		.no_i2s_capture = true,
 		.no_spdif_capture = true,

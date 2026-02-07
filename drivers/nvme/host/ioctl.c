@@ -142,13 +142,8 @@ static int nvme_map_user_request(struct request *req, u64 ubuffer,
 		ret = blk_rq_map_user_io(req, NULL, nvme_to_user_ptr(ubuffer),
 				bufflen, GFP_KERNEL, flags & NVME_IOCTL_VEC, 0,
 				0, rq_data_dir(req));
-
 	if (ret)
 		return ret;
-
-	bio = req->bio;
-	if (bdev)
-		bio_set_dev(bio, bdev);
 
 	if (has_metadata) {
 		ret = blk_rq_integrity_map_user(req, meta_buffer, meta_len);
@@ -410,7 +405,7 @@ static void nvme_uring_task_cb(struct io_uring_cmd *ioucmd,
 
 	if (pdu->bio)
 		blk_rq_unmap_user(pdu->bio);
-	io_uring_cmd_done(ioucmd, pdu->status, pdu->result, issue_flags);
+	io_uring_cmd_done32(ioucmd, pdu->status, pdu->result, issue_flags);
 }
 
 static enum rq_end_io_ret nvme_uring_cmd_end_io(struct request *req,
@@ -486,13 +481,15 @@ static int nvme_uring_cmd_io(struct nvme_ctrl *ctrl, struct nvme_ns *ns,
 	d.timeout_ms = READ_ONCE(cmd->timeout_ms);
 
 	if (d.data_len && (ioucmd->flags & IORING_URING_CMD_FIXED)) {
-		/* fixedbufs is only for non-vectored io */
-		if (vec)
-			return -EINVAL;
+		int ddir = nvme_is_write(&c) ? WRITE : READ;
 
-		ret = io_uring_cmd_import_fixed(d.addr, d.data_len,
-			nvme_is_write(&c) ? WRITE : READ, &iter, ioucmd,
-			issue_flags);
+		if (vec)
+			ret = io_uring_cmd_import_fixed_vec(ioucmd,
+					u64_to_user_ptr(d.addr), d.data_len,
+					ddir, &iter, issue_flags);
+		else
+			ret = io_uring_cmd_import_fixed(d.addr, d.data_len,
+					ddir, &iter, ioucmd, issue_flags);
 		if (ret < 0)
 			return ret;
 
@@ -720,7 +717,7 @@ int nvme_ns_head_ioctl(struct block_device *bdev, blk_mode_t mode,
 
 	/*
 	 * Handle ioctls that apply to the controller instead of the namespace
-	 * seperately and drop the ns SRCU reference early.  This avoids a
+	 * separately and drop the ns SRCU reference early.  This avoids a
 	 * deadlock when deleting namespaces using the passthrough interface.
 	 */
 	if (is_ctrl_ioctl(cmd))

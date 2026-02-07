@@ -21,8 +21,6 @@
 #include <linux/skbuff.h>
 #include <linux/if_ether.h>
 #include <linux/spinlock.h>
-#include <linux/pci.h>
-#include <linux/pci_regs.h>
 #include <net/mac80211.h>
 
 /*
@@ -336,18 +334,6 @@ extern const char *ath_bus_type_strings[];
 static inline const char *ath_bus_type_to_string(enum ath_bus_type bustype)
 {
 	return ath_bus_type_strings[bustype];
-}
-
-static inline int ath_pci_aspm_state(u16 lnkctl)
-{
-	int state = 0;
-
-	if (lnkctl & PCI_EXP_LNKCTL_ASPM_L0S)
-		state |= PCIE_LINK_STATE_L0S;
-	if (lnkctl & PCI_EXP_LNKCTL_ASPM_L1)
-		state |= PCIE_LINK_STATE_L1;
-
-	return state;
 }
 
 #endif /* ATH_H */

@@ -1139,7 +1139,6 @@ static int qup_i2c_xfer(struct i2c_adapter *adap,
 		ret = num;
 out:
 
-	pm_runtime_mark_last_busy(qup->dev);
 	pm_runtime_put_autosuspend(qup->dev);
 
 	return ret;
@@ -1624,7 +1623,6 @@ static int qup_i2c_xfer_v2(struct i2c_adapter *adap,
 	if (ret == 0)
 		ret = num;
 out:
-	pm_runtime_mark_last_busy(qup->dev);
 	pm_runtime_put_autosuspend(qup->dev);
 
 	return ret;
@@ -1636,13 +1634,13 @@ static u32 qup_i2c_func(struct i2c_adapter *adap)
 }
 
 static const struct i2c_algorithm qup_i2c_algo = {
-	.master_xfer	= qup_i2c_xfer,
-	.functionality	= qup_i2c_func,
+	.xfer = qup_i2c_xfer,
+	.functionality = qup_i2c_func,
 };
 
 static const struct i2c_algorithm qup_i2c_algo_v2 = {
-	.master_xfer	= qup_i2c_xfer_v2,
-	.functionality	= qup_i2c_func,
+	.xfer = qup_i2c_xfer_v2,
+	.functionality = qup_i2c_func,
 };
 
 /*
@@ -1991,7 +1989,6 @@ static int qup_i2c_suspend(struct device *device)
 static int qup_i2c_resume(struct device *device)
 {
 	qup_i2c_pm_resume_runtime(device);
-	pm_runtime_mark_last_busy(device);
 	pm_request_autosuspend(device);
 	return 0;
 }

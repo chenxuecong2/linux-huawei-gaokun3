@@ -396,7 +396,7 @@ static ssize_t orangefs_debug_read(struct file *file,
 		goto out;
 
 	mutex_lock(&orangefs_debug_lock);
-	sprintf_ret = sprintf(buf, "%s", (char *)file->private_data);
+	sprintf_ret = scnprintf(buf, ORANGEFS_MAX_DEBUG_STRING_LEN, "%s", (char *)file->private_data);
 	mutex_unlock(&orangefs_debug_lock);
 
 	read_ret = simple_read_from_buffer(ubuf, count, ppos, buf, sprintf_ret);
@@ -440,14 +440,13 @@ static ssize_t orangefs_debug_write(struct file *file,
 		count = ORANGEFS_MAX_DEBUG_STRING_LEN;
 	}
 
-	buf = kzalloc(ORANGEFS_MAX_DEBUG_STRING_LEN, GFP_KERNEL);
-	if (!buf)
-		goto out;
-
-	if (copy_from_user(buf, ubuf, count - 1)) {
+	buf = memdup_user_nul(ubuf, count - 1);
+	if (IS_ERR(buf)) {
 		gossip_debug(GOSSIP_DEBUGFS_DEBUG,
-			     "%s: copy_from_user failed!\n",
+			     "%s: memdup_user_nul failed!\n",
 			     __func__);
+		rc = PTR_ERR(buf);
+		buf = NULL;
 		goto out;
 	}
 

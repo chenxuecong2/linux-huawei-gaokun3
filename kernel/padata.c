@@ -63,17 +63,6 @@ static inline void padata_put_pd(struct parallel_data *pd)
 	padata_put_pd_cnt(pd, 1);
 }
 
-static int padata_index_to_cpu(struct parallel_data *pd, int cpu_index)
-{
-	int cpu, target_cpu;
-
-	target_cpu = cpumask_first(pd->cpumask.pcpu);
-	for (cpu = 0; cpu < cpu_index; cpu++)
-		target_cpu = cpumask_next(target_cpu, pd->cpumask.pcpu);
-
-	return target_cpu;
-}
-
 static int padata_cpu_hash(struct parallel_data *pd, unsigned int seq_nr)
 {
 	/*
@@ -82,7 +71,7 @@ static int padata_cpu_hash(struct parallel_data *pd, unsigned int seq_nr)
 	 */
 	int cpu_index = seq_nr % cpumask_weight(pd->cpumask.pcpu);
 
-	return padata_index_to_cpu(pd, cpu_index);
+	return cpumask_nth(cpu_index, pd->cpumask.pcpu);
 }
 
 static struct padata_work *padata_work_alloc(void)
@@ -192,9 +181,9 @@ int padata_do_parallel(struct padata_shell *ps,
 		       struct padata_priv *padata, int *cb_cpu)
 {
 	struct padata_instance *pinst = ps->pinst;
-	int i, cpu, cpu_index, err;
 	struct parallel_data *pd;
 	struct padata_work *pw;
+	int cpu_index, err;
 
 	rcu_read_lock_bh();
 
@@ -210,12 +199,7 @@ int padata_do_parallel(struct padata_shell *ps,
 
 		/* Select an alternate fallback CPU and notify the caller. */
 		cpu_index = *cb_cpu % cpumask_weight(pd->cpumask.cbcpu);
-
-		cpu = cpumask_first(pd->cpumask.cbcpu);
-		for (i = 0; i < cpu_index; i++)
-			cpu = cpumask_next(cpu, pd->cpumask.cbcpu);
-
-		*cb_cpu = cpu;
+		*cb_cpu = cpumask_nth(cpu_index, pd->cpumask.cbcpu);
 	}
 
 	err = -EBUSY;
@@ -307,8 +291,12 @@ static void padata_reorder(struct padata_priv *padata)
 		struct padata_serial_queue *squeue;
 		int cb_cpu;
 
-		cpu = cpumask_next_wrap(cpu, pd->cpumask.pcpu);
 		processed++;
+		/* When sequence wraps around, reset to the first CPU. */
+		if (unlikely(processed == 0))
+			cpu = cpumask_first(pd->cpumask.pcpu);
+		else
+			cpu = cpumask_next_wrap(cpu, pd->cpumask.pcpu);
 
 		cb_cpu = padata->cb_cpu;
 		squeue = per_cpu_ptr(pd->squeue, cb_cpu);
@@ -502,9 +490,9 @@ void __init padata_do_multithreaded(struct padata_mt_job *job)
 			do {
 				nid = next_node_in(old_node, node_states[N_CPU]);
 			} while (!atomic_try_cmpxchg(&last_used_nid, &old_node, nid));
-			queue_work_node(nid, system_unbound_wq, &pw->pw_work);
+			queue_work_node(nid, system_dfl_wq, &pw->pw_work);
 		} else {
-			queue_work(system_unbound_wq, &pw->pw_work);
+			queue_work(system_dfl_wq, &pw->pw_work);
 		}
 
 	/* Use the current thread, which saves starting a workqueue worker. */
@@ -979,8 +967,9 @@ struct padata_instance *padata_alloc(const char *name)
 
 	cpus_read_lock();
 
-	pinst->serial_wq = alloc_workqueue("%s_serial", WQ_MEM_RECLAIM |
-					   WQ_CPU_INTENSIVE, 1, name);
+	pinst->serial_wq = alloc_workqueue("%s_serial",
+					   WQ_MEM_RECLAIM | WQ_CPU_INTENSIVE | WQ_PERCPU,
+					   1, name);
 	if (!pinst->serial_wq)
 		goto err_put_cpus;
 

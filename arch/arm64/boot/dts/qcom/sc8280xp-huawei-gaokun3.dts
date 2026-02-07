@@ -73,6 +73,13 @@
 		#sound-dai-cells = <1>;
 	};
 
+	firmware {
+		qseecom {
+			compatible = "qcom,qseecom-sc8280xp", "qcom,qseecom";
+			qcom,scm = <&scm>;
+		};
+	};
+	
 	gpio-keys {
 		compatible = "gpio-keys";
 
@@ -586,6 +593,18 @@
 	status = "okay";
 };
 
+&gpi_dma0 {
+	status = "okay";
+};
+
+&gpi_dma1 {
+	status = "okay";
+};
+
+&gpi_dma2 {
+	status = "okay";
+};
+
 &gpu {
 	status = "okay";
 
@@ -715,7 +734,7 @@
 };
 
 &mdss0_dp0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &mdss0_dp0_out {
@@ -724,7 +743,7 @@
 };
 
 &mdss0_dp1 {
-	status = "okay";
+	status = "disabled";
 };
 
 &mdss0_dp1_out {
@@ -779,6 +798,8 @@
 		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
 		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
 		vddrfa1p8-supply = <&vreg_pmu_rfa_1p7>;
+		
+		qcom,calibration-variant = "HW_GK3";		
 	};
 };
 
@@ -1478,4 +1499,81 @@
 		drive-strength = <8>;
 		bias-pull-down;
 	};
+};
+
+&mdss0 {
+	status = "okay";
+};
+
+&mdss0_dsi0 {
+	status = "okay";
+	vdda-supply = <&vreg_l6b>;
+
+	qcom,dual-dsi-mode;
+	qcom,master-dsi;
+
+	panel@0 {
+		compatible = "himax,hx83121a";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 38 GPIO_ACTIVE_LOW>;
+
+		vddio-supply = <&vreg_l3b>;
+		vsp-supply = <&vreg_l7b>;
+		vsn-supply = <&vreg_l7b>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				panel_in_0: endpoint {
+					remote-endpoint = <&mdss0_dsi0_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				panel_in_1: endpoint {
+					remote-endpoint = <&mdss0_dsi1_out>;
+				};
+			};
+		};
+	};
+};
+
+&mdss0_dsi0_out {
+	remote-endpoint = <&panel_in_0>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss0_dsi0_phy {
+	status = "okay";
+	vdds-supply = <&vreg_l6b>;
+};
+
+&mdss0_dsi1 {
+	status = "okay";
+	vdda-supply = <&vreg_l6b>;
+
+	qcom,dual-dsi-mode;
+};
+
+&mdss0_dsi1_out {
+	remote-endpoint = <&panel_in_1>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss0_dsi1_phy {
+	status = "okay";
+	vdds-supply = <&vreg_l6b>;
+};
+
+&mdss0_dp0 {
+	status = "disabled";
+};
+
+&mdss0_dp1 {
+	status = "disabled";
 };

@@ -95,6 +95,14 @@ EXPORT_SYMBOL(rpmsg_release_channel);
  * equals to the src address of their rpmsg channel), the driver's handler
  * is invoked to process it.
  *
+ * Note that the endpoint for simple rpmsg drivers is created before calling
+ * probe() and closed after calling remove(), so special care must be taken
+ * to handle calls to the rx callback before/in parallel of probe() and
+ * after/in parallel of remove(). If more control over the endpoint creation
+ * is required to avoid race conditions, drivers can omit the callback and
+ * explicitly call rpmsg_dev_open_ept() in probe() and rpmsg_destroy_ept() in
+ * remove(), together with locks as needed.
+ *
  * That said, more complicated drivers might need to allocate
  * additional rpmsg addresses, and bind them to different rx callbacks.
  * To accomplish that, those drivers need to call this function.
@@ -194,38 +202,6 @@ int rpmsg_sendto(struct rpmsg_endpoint *ept, void *data, int len, u32 dst)
 EXPORT_SYMBOL(rpmsg_sendto);
 
 /**
- * rpmsg_send_offchannel() - send a message using explicit src/dst addresses
- * @ept: the rpmsg endpoint
- * @src: source address
- * @dst: destination address
- * @data: payload of message
- * @len: length of payload
- *
- * This function sends @data of length @len to the remote @dst address,
- * and uses @src as the source address.
- * The message will be sent to the remote processor which the @ept
- * endpoint belongs to.
- * In case there are no TX buffers available, the function will block until
- * one becomes available, or a timeout of 15 seconds elapses. When the latter
- * happens, -ERESTARTSYS is returned.
- *
- * Can only be called from process context (for now).
- *
- * Return: 0 on success and an appropriate error value on failure.
- */
-int rpmsg_send_offchannel(struct rpmsg_endpoint *ept, u32 src, u32 dst,
-			  void *data, int len)
-{
-	if (WARN_ON(!ept))
-		return -EINVAL;
-	if (!ept->ops->send_offchannel)
-		return -ENXIO;
-
-	return ept->ops->send_offchannel(ept, src, dst, data, len);
-}
-EXPORT_SYMBOL(rpmsg_send_offchannel);
-
-/**
  * rpmsg_trysend() - send a message across to the remote processor
  * @ept: the rpmsg endpoint
  * @data: payload of message
@@ -300,37 +276,6 @@ __poll_t rpmsg_poll(struct rpmsg_endpoint *ept, struct file *filp,
 	return ept->ops->poll(ept, filp, wait);
 }
 EXPORT_SYMBOL(rpmsg_poll);
-
-/**
- * rpmsg_trysend_offchannel() - send a message using explicit src/dst addresses
- * @ept: the rpmsg endpoint
- * @src: source address
- * @dst: destination address
- * @data: payload of message
- * @len: length of payload
- *
- * This function sends @data of length @len to the remote @dst address,
- * and uses @src as the source address.
- * The message will be sent to the remote processor which the @ept
- * endpoint belongs to.
- * In case there are no TX buffers available, the function will immediately
- * return -ENOMEM without waiting until one becomes available.
- *
- * Can only be called from process context (for now).
- *
- * Return: 0 on success and an appropriate error value on failure.
- */
-int rpmsg_trysend_offchannel(struct rpmsg_endpoint *ept, u32 src, u32 dst,
-			     void *data, int len)
-{
-	if (WARN_ON(!ept))
-		return -EINVAL;
-	if (!ept->ops->trysend_offchannel)
-		return -ENXIO;
-
-	return ept->ops->trysend_offchannel(ept, src, dst, data, len);
-}
-EXPORT_SYMBOL(rpmsg_trysend_offchannel);
 
 /**
  * rpmsg_set_flow_control() - request remote to pause/resume transmission
@@ -526,6 +471,32 @@ static int rpmsg_uevent(const struct device *dev, struct kobj_uevent_env *env)
 					rpdev->id.name);
 }
 
+struct rpmsg_endpoint *rpmsg_dev_open_ept(struct rpmsg_device *rpdev,
+					  rpmsg_rx_cb_t cb, void *priv)
+{
+	struct rpmsg_driver *rpdrv = to_rpmsg_driver(rpdev->dev.driver);
+	struct rpmsg_channel_info chinfo = {
+		.src = rpdev->src,
+		.dst = RPMSG_ADDR_ANY,
+	};
+	struct rpmsg_endpoint *ept;
+
+	strscpy(chinfo.name, rpdev->id.name, sizeof(chinfo.name));
+
+	ept = rpmsg_create_ept(rpdev, cb, priv, chinfo);
+	if (!ept) {
+		dev_err(&rpdev->dev, "failed to create endpoint\n");
+		return NULL;
+	}
+
+	rpdev->ept = ept;
+	rpdev->src = ept->addr;
+
+	ept->flow_cb = rpdrv->flowcontrol;
+	return ept;
+}
+EXPORT_SYMBOL(rpmsg_dev_open_ept);
+
 /*
  * when an rpmsg driver is probed with a channel, we seamlessly create
  * it an endpoint, binding its rx callback to a unique local rpmsg
@@ -538,30 +509,20 @@ static int rpmsg_dev_probe(struct device *dev)
 {
 	struct rpmsg_device *rpdev = to_rpmsg_device(dev);
 	struct rpmsg_driver *rpdrv = to_rpmsg_driver(rpdev->dev.driver);
-	struct rpmsg_channel_info chinfo = {};
 	struct rpmsg_endpoint *ept = NULL;
 	int err;
 
-	err = dev_pm_domain_attach(dev, true);
+	err = dev_pm_domain_attach(dev, PD_FLAG_ATTACH_POWER_ON |
+					PD_FLAG_DETACH_POWER_OFF);
 	if (err)
 		goto out;
 
 	if (rpdrv->callback) {
-		strscpy(chinfo.name, rpdev->id.name, sizeof(chinfo.name));
-		chinfo.src = rpdev->src;
-		chinfo.dst = RPMSG_ADDR_ANY;
-
-		ept = rpmsg_create_ept(rpdev, rpdrv->callback, NULL, chinfo);
+		ept = rpmsg_dev_open_ept(rpdev, rpdrv->callback, NULL);
 		if (!ept) {
-			dev_err(dev, "failed to create endpoint\n");
 			err = -ENOMEM;
 			goto out;
 		}
-
-		rpdev->ept = ept;
-		rpdev->src = ept->addr;
-
-		ept->flow_cb = rpdrv->flowcontrol;
 	}
 
 	err = rpdrv->probe(rpdev);
@@ -570,7 +531,7 @@ static int rpmsg_dev_probe(struct device *dev)
 		goto destroy_ept;
 	}
 
-	if (ept && rpdev->ops->announce_create) {
+	if (rpdev->ept && rpdev->ops->announce_create) {
 		err = rpdev->ops->announce_create(rpdev);
 		if (err) {
 			dev_err(dev, "failed to announce creation\n");
@@ -595,15 +556,13 @@ static void rpmsg_dev_remove(struct device *dev)
 	struct rpmsg_device *rpdev = to_rpmsg_device(dev);
 	struct rpmsg_driver *rpdrv = to_rpmsg_driver(rpdev->dev.driver);
 
-	if (rpdev->ops->announce_destroy)
+	if (rpdev->ept && rpdev->ops->announce_destroy)
 		rpdev->ops->announce_destroy(rpdev);
 
 	if (rpdrv->remove)
 		rpdrv->remove(rpdev);
 
-	dev_pm_domain_detach(dev, true);
-
-	if (rpdev->ept)
+	if (rpdrv->callback && rpdev->ept)
 		rpmsg_destroy_ept(rpdev->ept);
 }
 

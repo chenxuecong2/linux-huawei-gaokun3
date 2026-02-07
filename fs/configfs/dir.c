@@ -67,7 +67,6 @@ static void configfs_d_iput(struct dentry * dentry,
 
 const struct dentry_operations configfs_dentry_ops = {
 	.d_iput		= configfs_d_iput,
-	.d_delete	= always_delete_dentry,
 };
 
 #ifdef CONFIG_LOCKDEP
@@ -970,7 +969,7 @@ static void configfs_dump_one(struct configfs_dirent *sd, int level)
 {
 	pr_info("%*s\"%s\":\n", level, " ", configfs_get_name(sd));
 
-#define type_print(_type) if (sd->s_type & _type) pr_info("%*s %s\n", level, " ", #_type);
+#define type_print(_type) if (sd->s_type & _type) pr_info("%*s %s\n", level, " ", #_type)
 	type_print(CONFIGFS_ROOT);
 	type_print(CONFIGFS_DIR);
 	type_print(CONFIGFS_ITEM_ATTR);
@@ -1602,10 +1601,7 @@ static int configfs_dir_open(struct inode *inode, struct file *file)
 	err = -ENOENT;
 	if (configfs_dirent_is_ready(parent_sd)) {
 		file->private_data = configfs_new_dirent(parent_sd, NULL, 0, NULL);
-		if (IS_ERR(file->private_data))
-			err = PTR_ERR(file->private_data);
-		else
-			err = 0;
+		err = PTR_ERR_OR_ZERO(file->private_data);
 	}
 	inode_unlock(d_inode(dentry));
 

@@ -14,11 +14,9 @@
 
 struct ath12k_dp_rx_tid {
 	u8 tid;
-	u32 *vaddr;
-	dma_addr_t paddr;
-	u32 size;
 	u32 ba_win_sz;
 	bool active;
+	struct ath12k_reoq_buf qbuf;
 
 	/* Info related to rx fragments */
 	u32 cur_sn;
@@ -33,15 +31,29 @@ struct ath12k_dp_rx_tid {
 	struct ath12k_base *ab;
 };
 
+struct ath12k_dp_rx_tid_rxq {
+	u8 tid;
+	bool active;
+	struct ath12k_reoq_buf qbuf;
+};
+
 struct ath12k_dp_rx_reo_cache_flush_elem {
 	struct list_head list;
-	struct ath12k_dp_rx_tid data;
+	struct ath12k_dp_rx_tid_rxq data;
 	unsigned long ts;
+};
+
+struct dp_reo_update_rx_queue_elem {
+	struct list_head list;
+	struct ath12k_dp_rx_tid_rxq rx_tid;
+	int peer_id;
+	bool is_ml_peer;
+	u16 ml_peer_id;
 };
 
 struct ath12k_dp_rx_reo_cmd {
 	struct list_head list;
-	struct ath12k_dp_rx_tid data;
+	struct ath12k_dp_rx_tid_rxq data;
 	int cmd_num;
 	void (*handler)(struct ath12k_dp *dp, void *ctx,
 			enum hal_reo_cmd_status status);
@@ -167,5 +179,13 @@ void ath12k_dp_rx_h_fetch_info(struct ath12k_base *ab,  struct hal_rx_desc *rx_d
 			       struct ath12k_dp_rx_info *rx_info);
 
 int ath12k_dp_rx_crypto_mic_len(struct ath12k *ar, enum hal_encrypt_type enctype);
-
+u32 ath12k_dp_rxdesc_get_ppduid(struct ath12k_base *ab,
+				struct hal_rx_desc *rx_desc);
+bool ath12k_dp_rxdesc_mpdu_valid(struct ath12k_base *ab,
+				 struct hal_rx_desc *rx_desc);
+int ath12k_dp_rx_link_desc_return(struct ath12k_base *ab,
+				  struct ath12k_buffer_addr *buf_addr_info,
+				  enum hal_wbm_rel_bm_act action);
+bool ath12k_dp_rxdesc_mpdu_valid(struct ath12k_base *ab,
+				 struct hal_rx_desc *rx_desc);
 #endif /* ATH12K_DP_RX_H */

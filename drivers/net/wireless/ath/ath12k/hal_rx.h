@@ -483,15 +483,16 @@ enum hal_rx_ul_reception_type {
 	HAL_RECEPTION_TYPE_FRAMELESS
 };
 
-#define HAL_RX_PHYRX_RSSI_LEGACY_INFO_INFO0_RECEPTION	GENMASK(3, 0)
-#define HAL_RX_PHYRX_RSSI_LEGACY_INFO_INFO0_RX_BW	GENMASK(7, 5)
-#define HAL_RX_PHYRX_RSSI_LEGACY_INFO_INFO1_RSSI_COMB	GENMASK(15, 8)
+#define HAL_RX_RSSI_LEGACY_INFO_INFO0_RECEPTION		GENMASK(3, 0)
+#define HAL_RX_RSSI_LEGACY_INFO_INFO0_RX_BW		GENMASK(7, 5)
+#define HAL_RX_RSSI_LEGACY_INFO_INFO1_RSSI_COMB		GENMASK(15, 8)
+#define HAL_RX_RSSI_LEGACY_INFO_INFO2_RSSI_COMB_PPDU	GENMASK(7, 0)
 
 struct hal_rx_phyrx_rssi_legacy_info {
 	__le32 info0;
 	__le32 rsvd0[39];
 	__le32 info1;
-	__le32 rsvd1;
+	__le32 info2;
 } __packed;
 
 #define HAL_RX_MPDU_START_INFO0_PPDU_ID			GENMASK(31, 16)
@@ -538,6 +539,7 @@ struct hal_rx_msdu_desc_info {
 #define HAL_RX_NUM_MSDU_DESC 6
 struct hal_rx_msdu_list {
 	struct hal_rx_msdu_desc_info msdu_info[HAL_RX_NUM_MSDU_DESC];
+	u64 paddr[HAL_RX_NUM_MSDU_DESC];
 	u32 sw_cookie[HAL_RX_NUM_MSDU_DESC];
 	u8 rbm[HAL_RX_NUM_MSDU_DESC];
 };
@@ -694,7 +696,8 @@ struct hal_rx_resp_req_info {
 #define HAL_RX_MPDU_ERR_MPDU_LEN		BIT(6)
 #define HAL_RX_MPDU_ERR_UNENCRYPTED_FRAME	BIT(7)
 
-#define HAL_RX_PHY_CMN_USER_INFO0_GI		GENMASK(17, 16)
+#define HAL_RX_CMN_USR_INFO0_CP_SETTING			GENMASK(17, 16)
+#define HAL_RX_CMN_USR_INFO0_LTF_SIZE			GENMASK(19, 18)
 
 struct hal_phyrx_common_user_info {
 	__le32 rsvd[2];
@@ -1141,8 +1144,8 @@ void ath12k_hal_rx_msdu_link_info_get(struct hal_rx_msdu_link *link, u32 *num_ms
 				      u32 *msdu_cookies,
 				      enum hal_rx_buf_return_buf_manager *rbm);
 void ath12k_hal_rx_msdu_link_desc_set(struct ath12k_base *ab,
-				      struct hal_wbm_release_ring *dst_desc,
-				      struct hal_wbm_release_ring *src_desc,
+				      struct hal_wbm_release_ring *desc,
+				      struct ath12k_buffer_addr *buf_addr_info,
 				      enum hal_wbm_rel_bm_act action);
 void ath12k_hal_rx_buf_addr_info_set(struct ath12k_buffer_addr *binfo,
 				     dma_addr_t paddr, u32 cookie, u8 manager);
@@ -1157,5 +1160,12 @@ int ath12k_hal_wbm_desc_parse_err(struct ath12k_base *ab, void *desc,
 void ath12k_hal_rx_reo_ent_paddr_get(struct ath12k_base *ab,
 				     struct ath12k_buffer_addr *buff_addr,
 				     dma_addr_t *paddr, u32 *cookie);
+void ath12k_hal_rx_reo_ent_buf_paddr_get(void *rx_desc, dma_addr_t *paddr, u32 *sw_cookie,
+					 struct ath12k_buffer_addr **pp_buf_addr,
+					 u8 *rbm, u32 *msdu_cnt);
+void ath12k_hal_rx_msdu_list_get(struct ath12k *ar,
+				 struct hal_rx_msdu_link *link_desc,
+				 struct hal_rx_msdu_list *msdu_list,
+				 u16 *num_msdus);
 
 #endif

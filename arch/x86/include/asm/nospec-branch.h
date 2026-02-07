@@ -333,7 +333,7 @@
 .endm
 
 .macro CLEAR_BRANCH_HISTORY_VMEXIT
-	ALTERNATIVE "", "call clear_bhb_loop", X86_FEATURE_CLEAR_BHB_LOOP_ON_VMEXIT
+	ALTERNATIVE "", "call clear_bhb_loop", X86_FEATURE_CLEAR_BHB_VMEXIT
 .endm
 #else
 #define CLEAR_BRANCH_HISTORY
@@ -514,6 +514,7 @@ enum spectre_v2_user_mitigation {
 /* The Speculative Store Bypass disable variants */
 enum ssb_mitigation {
 	SPEC_STORE_BYPASS_NONE,
+	SPEC_STORE_BYPASS_AUTO,
 	SPEC_STORE_BYPASS_DISABLE,
 	SPEC_STORE_BYPASS_PRCTL,
 	SPEC_STORE_BYPASS_SECCOMP,
@@ -529,6 +530,8 @@ void alternative_msr_write(unsigned int msr, u64 val, unsigned int feature)
 		    [feature] "i" (feature)
 		: "memory");
 }
+
+DECLARE_PER_CPU(bool, x86_ibpb_exit_to_user);
 
 static inline void indirect_branch_prediction_barrier(void)
 {
@@ -577,7 +580,7 @@ DECLARE_STATIC_KEY_FALSE(cpu_buf_idle_clear);
 
 DECLARE_STATIC_KEY_FALSE(switch_mm_cond_l1d_flush);
 
-DECLARE_STATIC_KEY_FALSE(mmio_stale_data_clear);
+DECLARE_STATIC_KEY_FALSE(cpu_buf_vm_clear);
 
 extern u16 x86_verw_sel;
 

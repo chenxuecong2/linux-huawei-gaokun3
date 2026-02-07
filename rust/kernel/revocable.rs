@@ -5,6 +5,8 @@
 //! The [`Revocable`] type wraps other types and allows access to them to be revoked. The existence
 //! of a [`RevocableGuard`] ensures that objects remain valid.
 
+use pin_init::Wrapper;
+
 use crate::{bindings, prelude::*, sync::rcu, types::Opaque};
 use core::{
     marker::PhantomData,
@@ -80,11 +82,11 @@ unsafe impl<T: Sync + Send> Sync for Revocable<T> {}
 
 impl<T> Revocable<T> {
     /// Creates a new revocable instance of the given data.
-    pub fn new(data: impl PinInit<T>) -> impl PinInit<Self> {
-        pin_init!(Self {
+    pub fn new<E>(data: impl PinInit<T, E>) -> impl PinInit<Self, E> {
+        try_pin_init!(Self {
             is_available: AtomicBool::new(true),
             data <- Opaque::pin_init(data),
-        })
+        }? E)
     }
 
     /// Tries to access the revocable wrapped object.
@@ -121,6 +123,34 @@ impl<T> Revocable<T> {
         } else {
             None
         }
+    }
+
+    /// Tries to access the wrapped object and run a closure on it while the guard is held.
+    ///
+    /// This is a convenience method to run short non-sleepable code blocks while ensuring the
+    /// guard is dropped afterwards. [`Self::try_access`] carries the risk that the caller will
+    /// forget to explicitly drop that returned guard before calling sleepable code; this method
+    /// adds an extra safety to make sure it doesn't happen.
+    ///
+    /// Returns [`None`] if the object has been revoked and is therefore no longer accessible, or
+    /// the result of the closure wrapped in [`Some`]. If the closure returns a [`Result`] then the
+    /// return type becomes `Option<Result<>>`, which can be inconvenient. Users are encouraged to
+    /// define their own macro that turns the [`Option`] into a proper error code and flattens the
+    /// inner result into it if it makes sense within their subsystem.
+    pub fn try_access_with<R, F: FnOnce(&T) -> R>(&self, f: F) -> Option<R> {
+        self.try_access().map(|t| f(&*t))
+    }
+
+    /// Directly access the revocable wrapped object.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure this [`Revocable`] instance hasn't been revoked and won't be revoked
+    /// as long as the returned `&T` lives.
+    pub unsafe fn access(&self) -> &T {
+        // SAFETY: By the safety requirement of this function it is guaranteed that
+        // `self.data.get()` is a valid pointer to an instance of `T`.
+        unsafe { &*self.data.get() }
     }
 
     /// # Safety
@@ -203,6 +233,10 @@ impl<T> PinnedDrop for Revocable<T> {
 ///
 /// The RCU read-side lock is held while the guard is alive.
 pub struct RevocableGuard<'a, T> {
+    // This can't use the `&'a T` type because references that appear in function arguments must
+    // not become dangling during the execution of the function, which can happen if the
+    // `RevocableGuard` is passed as a function argument and then dropped during execution of the
+    // function.
     data_ref: *const T,
     _rcu_guard: rcu::Guard,
     _p: PhantomData<&'a ()>,

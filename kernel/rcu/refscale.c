@@ -246,36 +246,6 @@ static const struct ref_scale_ops srcu_fast_ops = {
 	.name		= "srcu-fast"
 };
 
-static void srcu_lite_ref_scale_read_section(const int nloops)
-{
-	int i;
-	int idx;
-
-	for (i = nloops; i >= 0; i--) {
-		idx = srcu_read_lock_lite(srcu_ctlp);
-		srcu_read_unlock_lite(srcu_ctlp, idx);
-	}
-}
-
-static void srcu_lite_ref_scale_delay_section(const int nloops, const int udl, const int ndl)
-{
-	int i;
-	int idx;
-
-	for (i = nloops; i >= 0; i--) {
-		idx = srcu_read_lock_lite(srcu_ctlp);
-		un_delay(udl, ndl);
-		srcu_read_unlock_lite(srcu_ctlp, idx);
-	}
-}
-
-static const struct ref_scale_ops srcu_lite_ops = {
-	.init		= rcu_sync_scale_init,
-	.readsection	= srcu_lite_ref_scale_read_section,
-	.delaysection	= srcu_lite_ref_scale_delay_section,
-	.name		= "srcu-lite"
-};
-
 #ifdef CONFIG_TASKS_RCU
 
 // Definitions for RCU Tasks ref scale testing: Empty read markers.
@@ -1051,7 +1021,7 @@ static int main_func(void *arg)
 	set_user_nice(current, MAX_NICE);
 
 	VERBOSE_SCALEOUT("main_func task started");
-	result_avg = kzalloc(nruns * sizeof(*result_avg), GFP_KERNEL);
+	result_avg = kcalloc(nruns, sizeof(*result_avg), GFP_KERNEL);
 	buf = kzalloc(800 + 64, GFP_KERNEL);
 	if (!result_avg || !buf) {
 		SCALEOUT_ERRSTRING("out of memory");
@@ -1163,9 +1133,9 @@ ref_scale_cleanup(void)
 					     reader_tasks[i].task);
 	}
 	kfree(reader_tasks);
+	reader_tasks = NULL;
 
 	torture_stop_kthread("main_task", main_task);
-	kfree(main_task);
 
 	// Do scale-type-specific cleanup operations.
 	if (cur_ops->cleanup != NULL)
@@ -1193,7 +1163,7 @@ ref_scale_init(void)
 	long i;
 	int firsterr = 0;
 	static const struct ref_scale_ops *scale_ops[] = {
-		&rcu_ops, &srcu_ops, &srcu_fast_ops, &srcu_lite_ops, RCU_TRACE_OPS RCU_TASKS_OPS
+		&rcu_ops, &srcu_ops, &srcu_fast_ops, RCU_TRACE_OPS RCU_TASKS_OPS
 		&refcnt_ops, &rwlock_ops, &rwsem_ops, &lock_ops, &lock_irq_ops,
 		&acqrel_ops, &sched_clock_ops, &clock_ops, &jiffies_ops,
 		&typesafe_ref_ops, &typesafe_lock_ops, &typesafe_seqlock_ops,
